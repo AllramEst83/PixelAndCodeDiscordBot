@@ -2,6 +2,7 @@ import openai
 import discord
 import asyncio
 import os
+import sys
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -13,6 +14,17 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
+
+def verify_env_variables():
+    """Check if all required environment variables are set."""
+    if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID:
+        print("Error: Required environment variables are missing.")
+        return False
+    return True
+
+if not verify_env_variables():
+    print("Bot startup aborted due to missing environment variables.")
+    sys.exit(1)
 
 # Define Discord bot intents
 intents = discord.Intents.all()
