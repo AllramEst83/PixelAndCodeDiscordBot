@@ -3,11 +3,25 @@ import discord
 import asyncio
 from discord import app_commands
 from discord.ext import commands
+# from dotenv import load_dotenv
 import os
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+logging.info("Fetching env variables.")
+
+# load_dotenv() # This loads the variables from .env
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
+
+logging.info("env varibles loaded in some form")
 
 # Define intents
 intents = discord.Intents.all()
@@ -15,12 +29,12 @@ intents = discord.Intents.all()
 # Create an instance of a bot with the defined intents
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-print(f"Bot initialized")
+logging.info("Bot initialized")
 
 # Initialize the OpenAI client
 client = openai.Client(api_key = OPENAI_API_KEY)
 
-print(f"OpenAI client initialized")
+logging.info("OpenAI client initialized")
 
 # Event listener for when the bot has switched from offline to online
 @bot.event
@@ -31,6 +45,7 @@ async def on_ready():
         print(f"Synced {len(synced)} commands")
         for cmd in synced:
             print(f"Command: /{cmd.name}")
+            logging.info(f"Bot up and running as {bot.user.name}")
     except Exception as e:
         print(e)
 
