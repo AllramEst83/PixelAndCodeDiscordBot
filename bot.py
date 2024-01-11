@@ -82,13 +82,19 @@ async def on_ready():
 @bot.tree.command(name="ask_the_bot")
 @app_commands.describe(question="Ask a question.")
 async def ask_the_bot(ctx: discord.Interaction, question: str):
-    print(f"User question: {question}")
-    await ctx.response.send_message("Processing your request, please wait...")
+    try:
+        print(f"User question: {question}")
+        await ctx.response.send_message("Processing your request, please wait...")
 
-    thread = await create_thread()
-    await send_user_message(thread.id, question)
-    run_id = await create_and_poll_run(thread.id, ASSISTANT_ID)
-    await retrieve_and_send_response(ctx, thread.id)
+        thread = await create_thread()
+        await send_user_message(thread.id, question)
+        run_id = await create_and_poll_run(thread.id, ASSISTANT_ID)
+        await retrieve_and_send_response(ctx, thread.id)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
+
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)
