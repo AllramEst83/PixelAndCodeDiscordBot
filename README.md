@@ -16,10 +16,10 @@ This repository contains the source code for the Pixel&Code Discord Bot, an adva
 - **Error Handling and Logging:** Improved error handling and logging mechanisms for smoother operation and easier debugging.
 
 ## Configuration
-To run the Pixel&Code Discord Bot, you will need to create a `config.py` file in the root directory. This file should contain your Discord bot token, OpenAI API key, and the assistant ID. Your `config.py` should look like this:
+To run the Pixel&Code Discord Bot, you will need to create a `.env` file in the root directory. This file should contain your Discord bot token, OpenAI API key, and the assistant ID. Your `.env` should look like this:
 
 ```python
-# config.py
+# .env
 DISCORD_TOKEN = 'your_discord_bot_token_here'
 OPENAI_API_KEY = 'your_openai_api_key_here'
 ASSISTANT_ID = 'your_assistant_id_here'
