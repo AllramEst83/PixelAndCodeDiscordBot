@@ -10,6 +10,8 @@ print(f"Checking if .env file is present")
 
 load_dotenv() # This loads the variables from .env
 
+print(f"load_dotenv was successful")
+
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
