@@ -3,12 +3,12 @@ import discord
 import asyncio
 from discord import app_commands
 from discord.ext import commands
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import os
 
 print(f"Checking if .env file is present")
 
-load_dotenv() # This loads the variables from .env
+# load_dotenv() # This loads the variables from .env
 
 print(f"load_dotenv was successful")
 
