@@ -12,14 +12,20 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
 
+print(f"Env vaibles should be loaded")
+
 # Define intents
 intents = discord.Intents.all()
 
 # Create an instance of a bot with the defined intents
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+print(f"Bot initialized")
+
 # Initialize the OpenAI client
 client = openai.Client(api_key = OPENAI_API_KEY)
+
+print(f"OpenAI client initialized")
 
 # Event listener for when the bot has switched from offline to online
 @bot.event
