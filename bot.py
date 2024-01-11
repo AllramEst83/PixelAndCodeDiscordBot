@@ -3,20 +3,11 @@ import discord
 import asyncio
 from discord import app_commands
 from discord.ext import commands
-# from dotenv import load_dotenv
 import os
-
-print(f"Checking if .env file is present")
-
-# load_dotenv() # This loads the variables from .env
-
-print(f"load_dotenv was successful")
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
-
-print(f"Env vaibles should be loaded")
 
 # Define intents
 intents = discord.Intents.all()
