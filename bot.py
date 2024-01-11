@@ -3,7 +3,14 @@ import discord
 import asyncio
 from discord import app_commands
 from discord.ext import commands
-from config import DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID
+from dotenv import load_dotenv
+import os
+
+load_dotenv() # This loads the variables from .env
+
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+ASSISTANT_ID = os.getenv('ASSISTANT_ID')
 
 # Define intents
 intents = discord.Intents.all()
