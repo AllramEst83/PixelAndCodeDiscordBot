@@ -128,7 +128,7 @@ async def on_ready():
 async def ask_the_bot(ctx: discord.Interaction, question: str):
     try:
         user_id = str(ctx.user.id)  # Get user ID as string
-        await ctx.response.send_message("Processing your request, please wait...")
+        await ctx.response.send_message(f"Question: {question}, Processing your request, please wait...")
 
         thread_id = await get_or_create_thread(user_id)
         await send_user_message(thread_id, question)
@@ -137,6 +137,11 @@ async def ask_the_bot(ctx: discord.Interaction, question: str):
 
     except Exception as e:
         await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
+
+@bot.event
+async def on_message(message):
+    if bot.user.mention in message.content.split():
+        await message.channel.send('Yes yes, I am here, please shut up I am sleeping!')
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)
