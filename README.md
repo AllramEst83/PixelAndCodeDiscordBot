@@ -1,19 +1,20 @@
 # Pixel&Code Discord Bot
 
 ## Overview
-This repository contains the source code for the Pixel&Code Discord Bot, an advanced assistant designed to answer queries about the Pixel&Code company. Utilizing the OpenAI GPT model, this bot provides informative and context-aware responses to various user inquiries, enhancing the user experience on the Discord platform.
+This repository contains the source code for the Pixel&Code Discord Bot, a sophisticated assistant designed for answering queries about Pixel&Code. Incorporating OpenAI's GPT model, it offers context-aware and informative responses on Discord, enhancing user interaction and knowledge about the company.
 
 ## Features
-- **Slash Command Integration:** Users can interact with the bot using intuitive slash commands, offering a seamless and user-friendly experience.
-- **OpenAI GPT Integration:** The bot leverages the powerful GPT model from OpenAI for generating accurate and relevant responses.
-- **Asynchronous Processing:** Ensures efficient handling of user requests and interactions, maintaining optimal performance even under load.
-- **Secure API Key Handling:** API keys and sensitive data are securely managed, ensuring best practices for security and privacy.
+- **Slash Command Integration**: Engages users with intuitive slash commands for a seamless experience.
+- **User-Specific Thread Management**: Maintains individual conversation threads for users, improving context continuity.
+- **OpenAI GPT Integration**: Utilizes OpenAI's GPT model for generating accurate and relevant responses.
+- **Asynchronous Processing**: Handles user requests efficiently, ensuring optimal performance.
+- **Secure API Key Handling**: Manages API keys and sensitive data securely, adhering to best practices for security and privacy.
 
 ## Recent Updates
-- **Transition to Slash Commands:** Migrated from traditional prefix commands to modern slash commands for an improved user interface.
-- **Asynchronous OpenAI API Calls:** Implemented non-blocking calls to OpenAI's API, ensuring the bot remains responsive and efficient.
-- **Dynamic Response Generation:** Enhanced the bot's ability to generate dynamic responses based on user input, leveraging the latest GPT model.
-- **Error Handling and Logging:** Improved error handling and logging mechanisms for smoother operation and easier debugging.
+- **Transition to Slash Commands**: Shifted from traditional prefix commands to modern slash commands for enhanced user interaction.
+- **Thread-Based User Interaction**: Implemented user-specific threads for maintaining conversation history and context.
+- **30-Minute Timeout Mechanism**: Introduced a timeout system to manage resources and improve efficiency, including deletion of inactive threads at OpenAI's end.
+- **Error Handling and Logging**: Enhanced error handling and logging for smoother operations and easier troubleshooting.
 
 ## Configuration
 To run the Pixel&Code Discord Bot, you will need to create a `.env` file in the root directory. This file should contain your Discord bot token, OpenAI API key, and the assistant ID. Your `.env` should look like this:
