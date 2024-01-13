@@ -16,6 +16,8 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
 
+
+# Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
 def verify_env_variables():
     """Check if all required environment variables are set."""
     if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID:
@@ -142,6 +144,10 @@ async def ask_the_bot(ctx: discord.Interaction, question: str):
 async def on_message(message):
     if bot.user.mention in message.content.split():
         await message.channel.send('Yes yes, I am here, please shut up I am sleeping!')
+
+
+# Retrieve the Discord token from the environment variable
+verify_env_variables()
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)
