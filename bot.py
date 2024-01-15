@@ -103,15 +103,15 @@ async def create_and_poll_run(thread_id, assistant_id):
             return run_id
 
 # Function to retrieve the response from the assistant and send it to the user
-async def retrieve_and_send_response(ctx, thread_id):
+async def retrieve_response(thread_id):
     loop = asyncio.get_running_loop()
     messages = await loop.run_in_executor(None, lambda: client.beta.threads.messages.list(thread_id=thread_id))
     assistant_messages = [m for m in messages.data if m.role == 'assistant']
 
     if assistant_messages:
-        await ctx.followup.send(f"{assistant_messages[0].content[0].text.value}.")
+        return f"{assistant_messages[0].content[0].text.value}."
     else:
-        await ctx.followup.send("Sorry, I couldn't fetch a response. Please try again later or a different question.")
+        return "Sorry, I couldn't fetch a response. Please try again later or a different question."
 
 # Event listener for when the bot is ready and online
 @bot.event
@@ -134,17 +134,32 @@ async def ask_the_bot(ctx: discord.Interaction, question: str):
 
         thread_id = await get_or_create_thread(user_id)
         await send_user_message(thread_id, question)
-        run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)
-        await retrieve_and_send_response(ctx, thread_id)
+        run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
+        response = await retrieve_response(thread_id)
+
+        await ctx.followup.send(response)
 
     except Exception as e:
         await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
 
+# Listen for bot mentions
 @bot.event
 async def on_message(message):
-    if bot.user.mention in message.content.split():
-        await message.channel.send('Yes yes, I am here, please shut up I am sleeping!')
 
+    user_id = str(message.author.id)  # Get user ID as string
+    question = message.content.replace(bot.user.mention, '').strip() 
+
+    if bot.user.mention in message.content.split():
+        if question:
+           
+            thread_id = await get_or_create_thread(user_id)
+            await send_user_message(thread_id, question)
+            run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
+            response = await retrieve_response(thread_id)
+            await message.channel.send(response)
+
+        else:
+            await message.channel.send("You mentioned me! Do you have a question or something I can help with?")
 
 # Retrieve the Discord token from the environment variable
 verify_env_variables()
