@@ -130,7 +130,7 @@ async def on_ready():
 async def ask_the_bot(ctx: discord.Interaction, question: str):
     try:
         user_id = str(ctx.user.id)  # Get user ID as string
-        await ctx.response.send_message(question)
+        await ctx.response.send_message(f"Please wait... var god vänta... ♻️")
 
         thread_id = await get_or_create_thread(user_id)
         await send_user_message(thread_id, question)
