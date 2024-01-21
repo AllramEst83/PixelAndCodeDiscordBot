@@ -37,16 +37,15 @@ async def create_and_poll_run(thread_id, assistant_id, client: openai.Client):
 async def retrieve_response(thread_id, client: openai.Client):
     try:
         loop = asyncio.get_running_loop()
-        response = await loop.run_in_executor(None, lambda: client.beta.threads.messages.list(thread_id=thread_id))
-        
-        # Check if there are any assistant messages
-        assistant_messages = [m for m in response.data if m.role == 'assistant']
-        if assistant_messages and assistant_messages[0].content:
-            embededMessage = await get_embed_message(assistant_messages[0].content[0].text.value, discord.Color.green())
+        messages = await loop.run_in_executor(None, lambda: client.beta.threads.messages.list(thread_id=thread_id))
+        assistant_messages = [m for m in messages.data if m.role == 'assistant']
+
+        if assistant_messages:
+            embededMessage = await get_embed_message("Answer", f"{assistant_messages[0].content[0].text.value}.", discord.Color.green())
             return embededMessage
         else:
-            return await get_embed_message("Sorry, I couldn't fetch a response. Please try again later or ask a different question.", discord.Color.red())
+             return await get_embed_message("Error", "Sorry, I couldn't fetch a response. Please try again later or ask a different question.", discord.Color.red())
 
     except Exception as e:
-        print(f"Error in retrieve_response: {e}")
-        return await get_embed_message("An error occurred while fetching the response.", discord.Color.red())
+            print(f"Error in retrieve_response: {e}")
+            return await get_embed_message("Error", "An error occurred while fetching the response.", discord.Color.red())

@@ -10,10 +10,10 @@ import openai
 user_threads = {}
 
 # Creates and returns a Discord embed with the specified response and color.
-async def get_embed_message(response:str, color: discord.Color):
+async def get_embed_message(title:str, response:str, color: discord.Color):
         # Create an embed object
         embed = discord.Embed(
-            title="Answer",
+            title=title,
             color=color
         )
         embed.add_field(name="", value=response, inline=False)

@@ -4,6 +4,7 @@ import os
 
 from utils import get_embed_message, verify_env_variables, get_or_create_thread, create_thread, cleanup_inactive_threads
 from messaging import send_user_message, create_and_poll_run, retrieve_response
+from constants import general_channel_name, pixel_and_code_role_name
 
 from discord import app_commands
 from discord.ext import commands
@@ -37,10 +38,38 @@ async def on_ready():
         print(f"Synced {len(synced)} commands")
     except Exception as e:
         print(e)
-        
+
+# Notifies when somebody joins the server
+@bot.event
+async def on_member_join(member):
+    # Find the channel named 'general'
+    general_channel = discord.utils.get(member.guild.channels, name=general_channel_name)
+    role_to_mention = discord.utils.get(member.guild.roles, name=pixel_and_code_role_name) 
+
+    if general_channel and role_to_mention:
+        # Format the role mention using the role's ID
+        role_mention_str = f"<@&{role_to_mention.id}>"
+        welcome_message = f"Med trumpeter och fanfar, välkomnar vi stolt vår nyaste medlem, {member.mention}, till denna ärevördiga sammankomst!, {role_mention_str}"
+        embed = await get_embed_message("Ny medlem har gått med! ❤️", welcome_message, discord.Color.purple())   
+        await general_channel.send(embed=embed)
+
+@bot.event
+async def on_member_remove(member):
+    # Find the channel named 'general'
+    general_channel = discord.utils.get(member.guild.channels, name=general_channel_name)
+    role_to_mention = discord.utils.get(member.guild.roles, name=pixel_and_code_role_name)
+
+    if general_channel and role_to_mention:
+        # Placeholder for the exit message
+        role_mention_str = f"<@&{role_to_mention.id}>"
+        exit_message = f"{member.mention} har lämnat vårt sällskap. Vi höjer våra glas till hen's ära! {role_mention_str}"
+        embed = await get_embed_message("Medlem har lämnat", exit_message, discord.Color.red())   
+        await general_channel.send(embed=embed)
+
+
 # Command definition for "ask_the_bot"
 @bot.tree.command(name="ask_the_bot")
-@app_commands.describe(question="Ask a question.")
+@app_commands.describe(question="Ask a question.")  
 async def ask_the_bot(ctx: discord.Interaction, question: str):
     try:
         user_id = str(ctx.user.id)  # Get user ID as string
@@ -48,7 +77,7 @@ async def ask_the_bot(ctx: discord.Interaction, question: str):
 
          # Here we check if somebody is asking who is the best - Kay ofcourse
         if "who is the best" in question.lower() or "vem är den bästa" in question.lower():
-            embededMessage = await get_embed_message(f"Definitely <@{user_id}>", discord.Color.pink())
+            embededMessage = await get_embed_message("Svar", f"Definitely <@{user_id}>", discord.Color.pink())
             await ctx.followup.send(embed=embededMessage)
             
         else:
@@ -74,7 +103,7 @@ async def on_message(message):
 
         # Here we check if somebody is asking who is the best - Kay ofcourse
         if "who is the best" in question.lower() or "vem är den bästa" in question.lower():
-            embededMessage = await get_embed_message(f"Definitely <@{user_id}>", discord.Color.pink())
+            embededMessage = await get_embed_message("Svar",f"Definitely <@{user_id}>", discord.Color.pink())
             await message.channel.send(embed=embededMessage)
 
         elif question:
