@@ -1,9 +1,10 @@
 import openai
 import discord
-import asyncio
 import os
-import sys
-import time
+
+from utils import get_embed_message, verify_env_variables, get_or_create_thread, create_thread, cleanup_inactive_threads
+from messaging import send_user_message, create_and_poll_run, retrieve_response
+
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -16,14 +17,6 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
 
-
-# Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
-def verify_env_variables():
-    """Check if all required environment variables are set."""
-    if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID:
-        print("Error: Required environment variables are missing.")
-        sys.exit(1)
-
 # Define Discord bot intents
 intents = discord.Intents.all()
 
@@ -33,102 +26,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # Initialize the OpenAI client with the API key
 client = openai.Client(api_key=OPENAI_API_KEY)
 
-# User-thread mapping with last interaction time
-user_threads = {}
-
-# Function to get or create a thread for a user
-async def get_or_create_thread(user_id):
-    current_time = time.time()
-    if user_id in user_threads:
-        thread_info = user_threads[user_id]
-        # Check if 30 minutes have passed since the last interaction
-        if current_time - thread_info['last_interaction'] < 1800:
-            thread_info['last_interaction'] = current_time
-            return thread_info['thread_id']
-        else:
-            # Remove old thread info and create a new thread
-            del user_threads[user_id]
-
-    thread = await create_thread()
-    user_threads[user_id] = {'thread_id': thread.id, 'last_interaction': current_time}
-    return thread.id
-
-# Function to create a new thread for OpenAI API
-async def create_thread():
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, lambda: client.beta.threads.create())
-
-# Cleanup function for inactive threads
-async def cleanup_inactive_threads():
-    loop = asyncio.get_running_loop()  # Get the current event loop
-    current_time = time.time()
-    inactive_users = [user_id for user_id, thread_info in user_threads.items() 
-                      if current_time - thread_info['last_interaction'] >= 1800]
-    for user_id in inactive_users:
-        # Delete the thread at OpenAI's end
-        thread_id = user_threads[user_id]['thread_id']
-        await loop.run_in_executor(None, lambda: client.beta.threads.delete(thread_id))
-
-        # Remove the thread info from the user_threads dictionary
-        del user_threads[user_id]
-
-    await asyncio.sleep(600)  # Check every 10 minutes
-    await cleanup_inactive_threads()
-
-# Function to send a message from the user to the OpenAI API thread
-async def send_user_message(thread_id, user_input):
-    loop = asyncio.get_running_loop()
-    await loop.run_in_executor(None, lambda: client.beta.threads.messages.create(
-        role="user",
-        content=user_input,
-        thread_id=thread_id
-    ))
-
-# Function to create a run with the assistant and poll for its completion
-async def create_and_poll_run(thread_id, assistant_id):
-    loop = asyncio.get_running_loop()
-    run = await loop.run_in_executor(None, lambda: client.beta.threads.runs.create(
-        thread_id=thread_id,
-        assistant_id=assistant_id
-    ))
-    run_id = run.id
-
-    while True:
-        run_status = await loop.run_in_executor(None, lambda: client.beta.threads.runs.retrieve(
-            thread_id=thread_id,
-            run_id=run_id
-        ).status)
-
-        if run_status in ['completed', 'failed', 'cancelled', 'expired']:
-            return run_id
-
-# Function to retrieve the response from the assistant and send it to the user
-async def retrieve_response(thread_id):
-    loop = asyncio.get_running_loop()
-    messages = await loop.run_in_executor(None, lambda: client.beta.threads.messages.list(thread_id=thread_id))
-    assistant_messages = [m for m in messages.data if m.role == 'assistant']
-
-    if assistant_messages:
-        embededMessage = await get_embed_message(f"{assistant_messages[0].content[0].text.value}.")
-        return embededMessage
-    else:
-        return "Sorry, I couldn't fetch a response. Please try again later or a different question."
-
-async def get_embed_message(response:str):
-        # Create an embed object
-        embed = discord.Embed(
-            title="Answer",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="", value=response, inline=False)
-
-        return embed
-
 # Event listener for when the bot is ready and online
 @bot.event
 async def on_ready():
     print(f'Bot logged in as {bot.user.name}')
-    bot.loop.create_task(cleanup_inactive_threads())
+    bot.loop.create_task(cleanup_inactive_threads(client))
+    print("cleanup_inactive_threads job started")
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} commands")
@@ -145,18 +48,19 @@ async def ask_the_bot(ctx: discord.Interaction, question: str):
 
          # Here we check if somebody is asking who is the best - Kay ofcourse
         if "who is the best" in question.lower() or "vem är den bästa" in question.lower():
-            embededMessage = await get_embed_message(f"Definitely <@{user_id}>")
+            embededMessage = await get_embed_message(f"Definitely <@{user_id}>", discord.Color.pink())
             await ctx.followup.send(embed=embededMessage)
             
         else:
-            thread_id = await get_or_create_thread(user_id)
-            await send_user_message(thread_id, question)
-            run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
-            response = await retrieve_response(thread_id)
+            thread_id = await get_or_create_thread(user_id, client)
+            await send_user_message(thread_id, question, client)
+            run_id = await create_and_poll_run(thread_id, ASSISTANT_ID, client)  
+            response = await retrieve_response(thread_id, client)
 
             await ctx.followup.send(embed=response)
 
     except Exception as e:
+        print(e)
         await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
 
 # Listen for bot mentions
@@ -170,22 +74,22 @@ async def on_message(message):
 
         # Here we check if somebody is asking who is the best - Kay ofcourse
         if "who is the best" in question.lower() or "vem är den bästa" in question.lower():
-            embededMessage = await get_embed_message(f"Definitely <@{user_id}>")
+            embededMessage = await get_embed_message(f"Definitely <@{user_id}>", discord.Color.pink())
             await message.channel.send(embed=embededMessage)
 
         elif question:
            
-            thread_id = await get_or_create_thread(user_id)
-            await send_user_message(thread_id, question)
-            run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
-            response = await retrieve_response(thread_id)
-            await message.channel.send(embed=response)
+            thread_id = await get_or_create_thread(user_id, client)
+            await send_user_message(thread_id, question, client)
+            run_id = await create_and_poll_run(thread_id, ASSISTANT_ID, client)        
+            embededMessage = await retrieve_response(thread_id, client)
+            await message.channel.send(embed=embededMessage)
 
         else:
             await message.channel.send("You mentioned me! Do you have a question or something I can help with?")
 
-# Retrieve the Discord token from the environment variable
-verify_env_variables()
+# Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
+verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID)
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)
