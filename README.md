@@ -23,7 +23,7 @@ The Pixel&Code Discord Bot is an advanced assistant, leveraging OpenAI's GPT mod
 ## Configuration
 To run the Pixel&Code Discord Bot, you will need to create a `.env` file in the root directory. This file should contain your Discord bot token, OpenAI API key, and the assistant ID. Your `.env` should look like this:
 
-```pyton
+```python
 # .env
 DISCORD_TOKEN = 'your_discord_bot_token_here'
 OPENAI_API_KEY = 'your_openai_api_key_here'
