@@ -109,9 +109,20 @@ async def retrieve_response(thread_id):
     assistant_messages = [m for m in messages.data if m.role == 'assistant']
 
     if assistant_messages:
-        return f"{assistant_messages[0].content[0].text.value}."
+        embededMessage = await get_embed_message(f"{assistant_messages[0].content[0].text.value}.")
+        return embededMessage
     else:
         return "Sorry, I couldn't fetch a response. Please try again later or a different question."
+
+async def get_embed_message(response:str):
+        # Create an embed object
+        embed = discord.Embed(
+            title="Answer",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="", value=response, inline=False)
+
+        return embed
 
 # Event listener for when the bot is ready and online
 @bot.event
@@ -132,12 +143,18 @@ async def ask_the_bot(ctx: discord.Interaction, question: str):
         user_id = str(ctx.user.id)  # Get user ID as string
         await ctx.response.send_message(question)
 
-        thread_id = await get_or_create_thread(user_id)
-        await send_user_message(thread_id, question)
-        run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
-        response = await retrieve_response(thread_id)
+         # Here we check if somebody is asking who is the best - Kay ofcourse
+        if "who is the best" in question.lower() or "vem är den bästa" in question.lower():
+            embededMessage = await get_embed_message(f"Definitely <@{user_id}>")
+            await ctx.followup.send(embed=embededMessage)
+            
+        else:
+            thread_id = await get_or_create_thread(user_id)
+            await send_user_message(thread_id, question)
+            run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
+            response = await retrieve_response(thread_id)
 
-        await ctx.followup.send(response)
+            await ctx.followup.send(embed=response)
 
     except Exception as e:
         await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
@@ -150,13 +167,19 @@ async def on_message(message):
     question = message.content.replace(bot.user.mention, '').strip() 
 
     if bot.user.mention in message.content.split():
-        if question:
+
+        # Here we check if somebody is asking who is the best - Kay ofcourse
+        if "who is the best" in question.lower() or "vem är den bästa" in question.lower():
+            embededMessage = await get_embed_message(f"Definitely <@{user_id}>")
+            await message.channel.send(embed=embededMessage)
+
+        elif question:
            
             thread_id = await get_or_create_thread(user_id)
             await send_user_message(thread_id, question)
             run_id = await create_and_poll_run(thread_id, ASSISTANT_ID)        
             response = await retrieve_response(thread_id)
-            await message.channel.send(response)
+            await message.channel.send(embed=response)
 
         else:
             await message.channel.send("You mentioned me! Do you have a question or something I can help with?")
