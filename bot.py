@@ -124,29 +124,29 @@ async def vote(ctx: discord.Interaction, question: str, options_str: str):
     await ctx.response.defer()
 
     await ctx.followup.send(embed=embed)  # Send the poll as a follow-up message
-    
 
-async def get_embed_message2(title: str, response: str, color: discord.Color):
-    # Create an embed object
-    embed = discord.Embed(
-        title=title,
-        description=response,
-        color=color
-    )
-
-    return embed
 
 @vote.error
 async def vote_error_handler(interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.MissingAnyRole):
-        await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+        # Check if the interaction has been responded to
+        if interaction.response.is_done():
+            # If already responded (deferred), use followup
+            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+        else:
+            # If not responded yet, use response
+            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
     else:
-        # Handle other types of errors (if necessary)
-        await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
+        # Handle other types of errors
+        if interaction.response.is_done():
+            await interaction.followup.send("An error occurred while processing the command.", ephemeral=True)
+        else:
+            await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
 
 @bot.tree.command(name="help", description="Visa en lista över Pixies kommandon och events")
 @app_commands.checks.has_any_role(pixel_and_code_role_name)
 async def help(ctx: discord.Interaction):
+    
         pixies_channel = discord.utils.get(ctx.guild.channels, name=pixies_channel_name)
         pixies_channel_str = ""
 
@@ -163,10 +163,20 @@ async def help(ctx: discord.Interaction):
 @help.error
 async def help_error_handler(interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.MissingAnyRole):
-        await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+        # Check if the interaction has been responded to
+        if interaction.response.is_done():
+            # If already responded (deferred), use followup
+            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+        else:
+            # If not responded yet, use response
+            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
     else:
-        # Handle other types of errors (if necessary)
-        await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
+        # Handle other types of errors
+        if interaction.response.is_done():
+            await interaction.followup.send("An error occurred while processing the command.", ephemeral=True)
+        else:
+            await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
+
 
 # Command definition for "ask_the_bot"
 @bot.tree.command(name="ask_the_bot", description="Ställ frågor till boten om Pixel&Code.")
