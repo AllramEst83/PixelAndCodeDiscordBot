@@ -20,6 +20,40 @@ async def get_embed_message(title:str, response:str, color: discord.Color):
 
         return embed
 
+# Creates and returns a embed for voting.
+async def get_embed_voting_message(question:str, description:str, role_mention_str:str, color: discord.Color):
+        # Create an embed object
+        embed = discord.Embed(title=question, description=description, color=color)    
+        embed.add_field(name="", value=f"{role_mention_str}", inline=False)
+        embed.set_footer(text=f"Vote by reacting with the corresponding emoji.")
+       
+        return embed
+
+async def create_help_embed_message(pixies_channel_str:str, color: discord.Color):
+
+        embed = discord.Embed(
+            title="Kommandon och Events",
+            description="Här är Pixies alla kommandon och events",
+            color=color
+        )
+        # Kommandon
+        embed.add_field(
+            name="Kommandon",
+            value="- **help**: En lista över Pixies kommandon (Bara för oss med rollen 'pixel&code').\n"
+                "- **ask_the_bot**: Ställ frågor till boten om Pixel&Code. Detta kommando är tänkt för kunder i lobbyn\n"
+                "- **vote**: Skapa en enkel omröstning. Max 10 val (Bara för oss med rollen 'pixel&code').",
+            inline=False
+        )
+
+        # Event
+        embed.add_field(
+            name="Event",
+            value=f"- **on_member_join**: Meddelar i kanalen {pixies_channel_str} när en medlem gått med.\n"
+                f"- **on_member_remove**: Pixie meddelar i kanalen {pixies_channel_str} när en medlem lämnat servern.\n"
+                "- **Mention**: Som ask_the_bot fast man kan göra en mention och ställa sin fråga om Pixel&Code.",
+            inline=False
+        )
+     
 # Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
 def verify_env_variables(DISCORD_TOKEN:str, OPENAI_API_KEY:str, ASSISTANT_ID:str):
     if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID:
