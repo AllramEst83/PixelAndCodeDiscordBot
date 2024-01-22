@@ -25,7 +25,7 @@ async def get_embed_voting_message(question:str, description:str, role_mention_s
         # Create an embed object
         embed = discord.Embed(title=question, description=description, color=color)    
         embed.add_field(name="", value=f"{role_mention_str}", inline=False)
-        embed.set_footer(text=f"Vote by reacting with the corresponding emoji.")
+        embed.set_footer(text=f"Rösta genom att reagera med motsvarande emoji.")
        
         return embed
 
@@ -53,6 +53,8 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
                 "- **Mention**: Som ask_the_bot fast man kan göra en mention och ställa sin fråga om Pixel&Code.",
             inline=False
         )
+
+        return embed
      
 # Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
 def verify_env_variables(DISCORD_TOKEN:str, OPENAI_API_KEY:str, ASSISTANT_ID:str):
