@@ -66,7 +66,33 @@ async def on_member_remove(member):
         embed = await get_embed_message("Medlem har lämnat", exit_message, discord.Color.red())   
         await general_channel.send(embed=embed)
 
+# Create a voting. Maximum amount of options is 10.
+@bot.tree.command(name='vote')
+@app_commands.describe(question="Create a voting.", options_str="Enter options separated by commas.")  
+async def vote(ctx: discord.Interaction, question: str, options_str: str):    
+    options = [opt.strip() for opt in options_str.split(',') if opt.strip()]
 
+    if len(options) > 10:        
+        await ctx.response.send_message("You can only provide a maximum of 10 options.")        
+        return
+    if len(options) < 2:        
+        await ctx.response.send_message("You need at least two options to create a poll.")        
+        return
+    
+    emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+    description = []    
+    
+    for x, option in enumerate(options):        
+        description.append(f"{emojis[x]} {option}")
+
+    embed = discord.Embed(title=question, description="\n".join(description), color=discord.Color.blue())    
+    embed.set_footer(text="Vote by reacting with the corresponding emoji.")
+
+    # If you expect the command to take longer than 3 seconds, use this line:
+    await ctx.response.defer()
+
+    await ctx.followup.send(embed=embed)  # Send the poll as a follow-up message
+    
 # Command definition for "ask_the_bot"
 @bot.tree.command(name="ask_the_bot")
 @app_commands.describe(question="Ask a question.")  
