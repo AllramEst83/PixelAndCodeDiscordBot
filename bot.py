@@ -50,6 +50,7 @@ async def on_member_join(member):
         # Format the role mention using the role's ID
         role_mention_str = role_to_mention.mention
         welcome_message = f"Med trumpeter och fanfar, välkomnar vi stolt vår nyaste medlem, {member.mention}, till denna ärevördiga sammankomst!, {role_mention_str}"
+
         embed = await get_embed_message("Ny medlem har gått med! ❤️", welcome_message, discord.Color.purple())   
         await pixies_channel.send(embed=embed)
 
@@ -60,9 +61,10 @@ async def on_member_remove(member):
     role_to_mention = discord.utils.get(member.guild.roles, name=pixel_and_code_role_name)
 
     if pixies_channel and role_to_mention:
-        # Placeholder for the exit message
+
         role_mention_str = role_to_mention.mention
         exit_message = f"{member.mention} har lämnat vårt sällskap. Vi höjer våra glas till hen's ära! {role_mention_str}"
+
         embed = await get_embed_message("Medlem har lämnat", exit_message, discord.Color.red())   
         await pixies_channel.send(embed=embed)
 
