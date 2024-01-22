@@ -50,7 +50,7 @@ async def on_member_join(member):
         # Format the role mention using the role's ID
         role_mention_str = f"<@&{role_to_mention.id}>"
         welcome_message = f"Med trumpeter och fanfar, välkomnar vi stolt vår nyaste medlem, {member.mention}, till denna ärevördiga sammankomst!, {role_mention_str}"
-        embed = await get_embed_message("Ny medlem har gått med! ❤️", welcome_message, discord.Color.purple())   
+        embed = await get_embed_message("Ny medlem har gått med! <:pc_heart_orange:1197121879375355915>", welcome_message, discord.Color.purple())   
         await general_channel.send(embed=embed)
 
 @bot.event
@@ -62,7 +62,7 @@ async def on_member_remove(member):
     if general_channel and role_to_mention:
         # Placeholder for the exit message
         role_mention_str = f"<@&{role_to_mention.id}>"
-        exit_message = f"{member.mention} har lämnat vårt sällskap. Vi höjer våra glas till hen's ära! {role_mention_str}"
+        exit_message = f"{member.mention} har lämnat vårt sällskap <:pc_heart:1197121144248074341>. Vi höjer våra glas till hen's ära! {role_mention_str}"
         embed = await get_embed_message("Medlem har lämnat", exit_message, discord.Color.red())   
         await general_channel.send(embed=embed)
 
