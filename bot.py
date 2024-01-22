@@ -51,7 +51,7 @@ async def on_member_join(member):
         role_mention_str = role_to_mention.mention
         welcome_message = f"Med trumpeter och fanfar, välkomnar vi stolt vår nyaste medlem, {member.mention}, till denna ärevördiga sammankomst!, {role_mention_str}"
 
-        embed = await get_embed_message("Ny medlem har gått med! ❤️", welcome_message, discord.Color.purple())   
+        embed = await get_embed_message("Ny medlem har gått med! <:pc_heart_orange:1197121879375355915>", welcome_message, discord.Color.purple())   
         await pixies_channel.send(embed=embed)
 
 @bot.event
@@ -65,7 +65,7 @@ async def on_member_remove(member):
         role_mention_str = role_to_mention.mention
         exit_message = f"{member.mention} har lämnat vårt sällskap. Vi höjer våra glas till hen's ära! {role_mention_str}"
 
-        embed = await get_embed_message("Medlem har lämnat", exit_message, discord.Color.red())   
+        embed = await get_embed_message("Medlem har lämnat <:pc_heart:1197121144248074341>", exit_message, discord.Color.red())   
         await pixies_channel.send(embed=embed)
 
 # Listen for bot mentions
