@@ -4,7 +4,7 @@ import os
 
 from utils import get_embed_message, verify_env_variables, get_or_create_thread, create_thread, cleanup_inactive_threads, get_embed_voting_message, create_help_embed_message
 from messaging import send_user_message, create_and_poll_run, retrieve_response
-from constants import pixies_channel_name, pixel_and_code_role_name, lobby_channel_name
+from constants import pixies_channel_name, pixel_and_code_role_name, gpt_instruction
 
 from discord import app_commands
 from discord.ext import commands
@@ -72,6 +72,9 @@ async def on_member_remove(member):
 @bot.event
 async def on_message(message):
 
+    if message.author == bot.user:
+        return
+    
     user_id = str(message.author.id)  # Get user ID as string
     question = message.content.replace(bot.user.mention, '').strip() 
 
@@ -96,7 +99,7 @@ async def on_message(message):
 
 # Create a voting. Maximum amount of options is 10.
 @app_commands.checks.has_any_role(pixel_and_code_role_name)
-@bot.tree.command(name='vote')
+@bot.tree.command(name='vote', description="Skapa en omröstning.")
 @app_commands.describe(question="Skapa en omröstning.", options_str="Ange alternativen separerade med kommatecken.")
 async def vote(ctx: discord.Interaction, question: str, options_str: str):    
     options = [opt.strip() for opt in options_str.split(',') if opt.strip()]
@@ -132,10 +135,10 @@ async def vote_error_handler(interaction: discord.Interaction, error: app_comman
         # Check if the interaction has been responded to
         if interaction.response.is_done():
             # If already responded (deferred), use followup
-            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask' istället.", ephemeral=True)
         else:
             # If not responded yet, use response
-            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask' istället.", ephemeral=True)
     else:
         # Handle other types of errors
         if interaction.response.is_done():
@@ -166,10 +169,10 @@ async def help_error_handler(interaction: discord.Interaction, error: app_comman
         # Check if the interaction has been responded to
         if interaction.response.is_done():
             # If already responded (deferred), use followup
-            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask' istället.", ephemeral=True)
         else:
             # If not responded yet, use response
-            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask_the_robot' istället.", ephemeral=True)
+            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask' istället.", ephemeral=True)
     else:
         # Handle other types of errors
         if interaction.response.is_done():
@@ -178,10 +181,92 @@ async def help_error_handler(interaction: discord.Interaction, error: app_comman
             await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
 
 
+# Command definition for summarizing chat history
+@bot.tree.command(name="summarize(beta)", description="Summera chathistoriken.")
+@app_commands.describe(limit="Summeringsgräns, 100 är rekomenderad max gräns (Men prova högre om du vill).")
+@app_commands.checks.has_any_role(pixel_and_code_role_name  )
+async def summarize(ctx: discord.Interaction, limit: int):    
+
+    # Check if the limit is positive
+    if limit <= 0:
+        await ctx.response.send_message("Please provide a positive number for the limit.")
+        return
+
+    # Defer the response as the next operations might take longer
+    await ctx.response.defer()
+
+    messages = []
+    last_id = None
+   
+    while len(messages) < limit:
+        # Calculate how many more messages we need to reach the limit
+        remaining = limit - len(messages)
+
+        # If last_id is set, get the message object for it
+        before_message = None
+        if last_id is not None:
+            try:
+                before_message = await ctx.channel.fetch_message(last_id)
+            except discord.NotFound:
+                # If the message is not found, break the loop
+                break
+
+        # Fetch the next batch of messages asynchronously
+        batch = [message async for message in ctx.channel.history(limit=min(remaining, 100), before=before_message)]
+        
+        if not batch:
+            # No more messages to fetch, break the loop
+            break
+
+        messages.extend(batch)
+        last_id = batch[-1].id
+
+        # Break if we have reached the limit
+        if len(messages) >= limit:
+            break
+
+    # Summarize messages
+    summary = f"{gpt_instruction}\n" + '\n'.join([f"{message.author.name}: {message.content}" for message in messages])
+
+    try:
+        # Process the summary (e.g., sending to a thread, polling for a response, etc.)
+        user_id = str(ctx.user.id)
+        thread_id = await get_or_create_thread(user_id, client)
+        await send_user_message(thread_id, summary, client)
+        run_id = await create_and_poll_run(thread_id, ASSISTANT_ID, client)  
+        embededResponse = await retrieve_response(thread_id, client)
+
+        # Send the processed response as a follow-up
+        await ctx.followup.send(embed = embededResponse)
+    except Exception as e:
+        # Send an error message as a follow-up if an exception occurs
+        await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
+
+
+@summarize.error
+async def summarize_error_handler(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.MissingAnyRole):
+        # Check if the interaction has been responded to
+        if interaction.response.is_done():
+            # If already responded (deferred), use followup
+            await interaction.followup.send("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask' istället.", ephemeral=True)
+        else:
+            # If not responded yet, use response
+            await interaction.response.send_message("Ledsen, men du kan tyvärr inte använda detta kommando. Prova gärna 'ask' istället.", ephemeral=True)
+    else:
+        print(f"An error occurred: {error}")  # Alternatively, use print for simple logging
+
+        # Handle other types of errors
+        if interaction.response.is_done():
+            await interaction.followup.send("An error occurred while processing the command.", ephemeral=True)
+        else:
+            await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
+
+
 # Command definition for "ask_the_bot"
-@bot.tree.command(name="ask_the_bot", description="Ställ frågor till boten om Pixel&Code.")
+@bot.tree.command(name="ask", description="Ställ frågor till boten om Pixel&Code.")
 @app_commands.describe(question="Ställ en fråga.")
-async def ask_the_bot(ctx: discord.Interaction, question: str):
+async def ask(ctx: discord.Interaction, question: str):
     try:
         user_id = str(ctx.user.id)  # Get user ID as string
         await ctx.response.send_message(question)

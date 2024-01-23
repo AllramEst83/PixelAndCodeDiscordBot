@@ -41,7 +41,8 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
             name="Kommandon",
             value="- **help**: En lista över Pixies kommandon (Bara för oss med rollen 'pixel&code').\n"
                 "- **ask_the_bot**: Ställ frågor till boten om Pixel&Code. Detta kommando är tänkt för kunder i lobbyn\n"
-                "- **vote**: Skapa en enkel omröstning. Max 10 val (Bara för oss med rollen 'pixel&code').",
+                "- **vote**: Skapa en enkel omröstning. Max 10 val (Bara för oss med rollen 'pixel&code').\n"
+                "- **Summarize**: Summerar kanalens innehåll. Bra om man vill komma ikapp men inte läsa igenom allt.",
             inline=False
         )
 
