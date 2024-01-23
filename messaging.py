@@ -41,7 +41,7 @@ async def retrieve_response(thread_id, client: openai.Client):
         assistant_messages = [m for m in messages.data if m.role == 'assistant']
 
         if assistant_messages:
-            embededMessage = await get_embed_message("Answer", f"{assistant_messages[0].content[0].text.value}.", discord.Color.green())
+            embededMessage = await get_embed_message("Svar", f"{assistant_messages[0].content[0].text.value}.", discord.Color.green())
             return embededMessage
         else:
              return await get_embed_message("Error", "Sorry, I couldn't fetch a response. Please try again later or ask a different question.", discord.Color.red())
