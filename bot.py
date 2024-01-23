@@ -2,9 +2,9 @@ import openai
 import discord
 import os
 
-from utils import get_embed_message, verify_env_variables, get_or_create_thread, create_thread, cleanup_inactive_threads, get_embed_voting_message, create_help_embed_message
+from utils import get_embed_message, verify_env_variables, get_or_create_thread, create_thread, cleanup_inactive_threads, get_embed_voting_message, create_help_embed_message, get_chat_history_by_limit
 from messaging import send_user_message, create_and_poll_run, retrieve_response
-from constants import pixies_channel_name, pixel_and_code_role_name, gpt_instruction
+from constants import pixies_channel_name, pixel_and_code_role_name, gpt_summary_instruction
 
 from discord import app_commands
 from discord.ext import commands
@@ -16,6 +16,7 @@ load_dotenv()
 # Retrieve the environment variables
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+SUMMARY_ASSISTANT_ID = os.getenv('SUMMARY_ASSISTANT_ID')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
 
 # Define Discord bot intents
@@ -26,6 +27,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Initialize the OpenAI client with the API key
 client = openai.Client(api_key=OPENAI_API_KEY)
+summary_client = openai.Client(api_key=OPENAI_API_KEY)
 
 # Event listener for when the bot is ready and online
 @bot.event
@@ -36,6 +38,8 @@ async def on_ready():
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} commands")
+
+        print("Reday to go!!!")
     except Exception as e:
         print(e)
 
@@ -182,63 +186,31 @@ async def help_error_handler(interaction: discord.Interaction, error: app_comman
 
 
 # Command definition for summarizing chat history
-@bot.tree.command(name="summarize(beta)", description="Summera chathistoriken.")
+@bot.tree.command(name="summarize_beta", description="Summera chathistoriken.")
 @app_commands.describe(limit="Summeringsgräns, 100 är rekomenderad max gräns (Men prova högre om du vill).")
-@app_commands.checks.has_any_role(pixel_and_code_role_name  )
+@app_commands.checks.has_any_role(pixel_and_code_role_name)
 async def summarize(ctx: discord.Interaction, limit: int):    
-
-    # Check if the limit is positive
-    if limit <= 0:
-        await ctx.response.send_message("Please provide a positive number for the limit.")
-        return
 
     # Defer the response as the next operations might take longer
     await ctx.response.defer()
 
-    messages = []
-    last_id = None
-   
-    while len(messages) < limit:
-        # Calculate how many more messages we need to reach the limit
-        remaining = limit - len(messages)
+     # Send an initial update to the user after deferring
+    await ctx.followup.send("Ett ögonblick så ska jag summera historiken.")
 
-        # If last_id is set, get the message object for it
-        before_message = None
-        if last_id is not None:
-            try:
-                before_message = await ctx.channel.fetch_message(last_id)
-            except discord.NotFound:
-                # If the message is not found, break the loop
-                break
-
-        # Fetch the next batch of messages asynchronously
-        batch = [message async for message in ctx.channel.history(limit=min(remaining, 100), before=before_message)]
-        
-        if not batch:
-            # No more messages to fetch, break the loop
-            break
-
-        messages.extend(batch)
-        last_id = batch[-1].id
-
-        # Break if we have reached the limit
-        if len(messages) >= limit:
-            break
-
-    # Summarize messages
-    summary = f"{gpt_instruction}\n" + '\n'.join([f"{message.author.name}: {message.content}" for message in messages])
+    summary = await get_chat_history_by_limit(ctx, limit, gpt_summary_instruction)
 
     try:
         # Process the summary (e.g., sending to a thread, polling for a response, etc.)
         user_id = str(ctx.user.id)
         thread_id = await get_or_create_thread(user_id, client)
         await send_user_message(thread_id, summary, client)
-        run_id = await create_and_poll_run(thread_id, ASSISTANT_ID, client)  
+        run_id = await create_and_poll_run(thread_id, SUMMARY_ASSISTANT_ID, summary_client)  
         embededResponse = await retrieve_response(thread_id, client)
 
         # Send the processed response as a follow-up
         await ctx.followup.send(embed = embededResponse)
     except Exception as e:
+        print(e)
         # Send an error message as a follow-up if an exception occurs
         await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
 
@@ -290,7 +262,7 @@ async def ask(ctx: discord.Interaction, question: str):
 
 
 # Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
-verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID)
+verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID, SUMMARY_ASSISTANT_ID)
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)
