@@ -6,4 +6,4 @@ lobby_channel_name = "lobby"
 pixel_and_code_role_name = 'pixel&code'
 
 # instructions
-gpt_instruction = 'Please summarize this chat history as accurately as possible, dividing it into logical sections. Only provide the summary in return:' 
+gpt_summary_instruction = 'Sammanfatta denna chatthistorik så noggrant som möjligt, dela in den i logiska avsnitt. Återge endast sammanfattningen:' 

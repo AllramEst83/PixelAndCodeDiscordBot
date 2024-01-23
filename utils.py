@@ -58,8 +58,8 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
         return embed
      
 # Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
-def verify_env_variables(DISCORD_TOKEN:str, OPENAI_API_KEY:str, ASSISTANT_ID:str):
-    if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID:
+def verify_env_variables(DISCORD_TOKEN:str, OPENAI_API_KEY:str, ASSISTANT_ID:str, SUMMARY_ASSISTANT_ID:str):
+    if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID or not SUMMARY_ASSISTANT_ID:
         print("Error: Required environment variables are missing.")
         sys.exit(1)
 
@@ -99,3 +99,44 @@ async def cleanup_inactive_threads(client: openai.Client):
             del user_threads[user_id]
 
         await asyncio.sleep(600)  # Check every 10 minutes
+
+async def get_chat_history_by_limit(ctx: discord.interactions, limit: int, gpt_instruction:str):
+         # Check if the limit is positive
+    if limit <= 0:
+        await ctx.response.send_message("Please provide a positive number for the limit.")
+        return
+
+    messages = []
+    last_id = None
+   
+    while len(messages) < limit:
+        # Calculate how many more messages we need to reach the limit
+        remaining = limit - len(messages)
+
+        # If last_id is set, get the message object for it
+        before_message = None
+        if last_id is not None:
+            try:
+                before_message = await ctx.channel.fetch_message(last_id)
+            except discord.NotFound:
+                # If the message is not found, break the loop
+                break
+
+        # Fetch the next batch of messages asynchronously
+        batch = [message async for message in ctx.channel.history(limit=min(remaining, 100), before=before_message)]
+        
+        if not batch:
+            # No more messages to fetch, break the loop
+            break
+
+        messages.extend(batch)
+        last_id = batch[-1].id
+
+        # Break if we have reached the limit
+        if len(messages) >= limit:
+            break
+
+    # Summarize messages
+    summary = f"{gpt_instruction}\n" + '\n'.join([f"{message.author.name}: {message.content}" for message in messages])
+
+    return summary
