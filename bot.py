@@ -133,12 +133,12 @@ async def send_supportive_message():
                 message += f"\n{role.mention}"            
 
             await channel.send(message)
+            print("Message sent")
             sent_today = True  # Mark as message sent
         else:
             print("Channel not found.")
     else:
         print("Guild not found.")
-
 
 
 # Scheduled task for sending messages
@@ -149,8 +149,6 @@ async def scheduled_message():
     if not is_task_active:
         print("Task is on pause by the user. Will not run scheduled_message. Run toggle_task to activate the Task")
         return  # Skip the task if it's not active
-
-    print("Running scheduled_message")
 
     stockholm_tz = pytz.timezone('Europe/Stockholm')
     now = datetime.now(stockholm_tz)
@@ -168,7 +166,7 @@ async def scheduled_message():
 
     # If today's message has already been sent, skip the rest of the function
     if sent_today:
-        
+        print("Message already sent today")
         return
 
     # Check if it's a weekday and current time is between the first and last scheduled times
@@ -189,9 +187,7 @@ async def scheduled_message():
                 # Only proceed to send the message if sleep completes without interruption
                 print("Sending message")
                 await send_supportive_message()
-                sent_today = True
-                chosen_time = datetime.strptime(chosen_time_str, "%H:%M")
-                print("Message sent")
+                chosen_time = datetime.strptime(chosen_time_str, "%H:%M")                
 
             except asyncio.CancelledError as e:
                 print(f"Scheduled_message was cancelled: {e}")
