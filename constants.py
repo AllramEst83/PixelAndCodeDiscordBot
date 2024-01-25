@@ -1,10 +1,9 @@
 # Channel names
 pixies_channel_name = 'pixie-push'
-lobby_channel_name = "lobby"
 
 # Role name
-pixel_and_code_role_name = 'pixel&code'
-bot_creator_role_name = 'bot-creator'
+pixel_and_code_role_name = 'Pixel&Code'
+bot_creator_role_name = 'Bot Creator'
 # instructions
 gpt_summary_instruction = 'Sammanfatta denna chatthistorik så noggrant som möjligt, dela in den i logiska avsnitt. Återge endast sammanfattningen:' 
 

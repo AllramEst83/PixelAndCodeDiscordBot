@@ -259,7 +259,7 @@ async def on_message(message):
 
 #Commands
 # Create a voting. Maximum amount of options is 10.
-@app_commands.checks.has_any_role(pixel_and_code_role_name)
+@app_commands.checks.has_role(pixel_and_code_role_name)
 @bot.tree.command(name='vote', description="Skapa en omröstning.")
 @app_commands.describe(question="Skapa en omröstning.", options_str="Ange alternativen separerade med kommatecken.")
 async def vote(ctx: discord.Interaction, question: str, options_str: str):    
@@ -309,7 +309,7 @@ async def vote_error_handler(interaction: discord.Interaction, error: app_comman
 
 
 @bot.tree.command(name="help", description="Visa en lista över Pixies kommandon och events")
-@app_commands.checks.has_any_role(pixel_and_code_role_name)
+@app_commands.checks.has_role(pixel_and_code_role_name)
 async def help(ctx: discord.Interaction):
     
         pixies_channel = discord.utils.get(ctx.guild.channels, name=pixies_channel_name)
@@ -345,7 +345,7 @@ async def help_error_handler(interaction: discord.Interaction, error: app_comman
 
 @bot.tree.command(name="summarize_beta", description="Summera chathistoriken.")
 @app_commands.describe(limit="Summeringsgräns, 100 är max gräns.")
-@app_commands.checks.has_any_role(pixel_and_code_role_name)
+@app_commands.checks.has_role(pixel_and_code_role_name)
 async def summarize(ctx: discord.Interaction, limit: int):
     # Ensure the limit does not exceed 100
     if limit > 100:
@@ -397,7 +397,7 @@ async def summarize_error_handler(interaction: discord.Interaction, error: app_c
 
 
 @bot.tree.command(name="toggle_task", description="Toggle the scheduled message task on or off.")
-@app_commands.checks.has_any_role(bot_creator_role_name)
+@app_commands.checks.has_role(bot_creator_role_name)
 async def toggle_task(ctx: discord.Interaction):
     global is_task_active
 
@@ -427,7 +427,7 @@ async def toggle_task_error_handler(interaction: discord.Interaction, error: app
             await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
 
 @bot.tree.command(name="is_task_running", description="Checks if the scheduled message task is active or paused.")
-@app_commands.checks.has_any_role(bot_creator_role_name)  # Adjust role check as needed
+@app_commands.checks.has_role(bot_creator_role_name)  # Adjust role check as needed
 async def is_task_running(ctx: discord.Interaction):
     global is_task_active
 
