@@ -157,3 +157,8 @@ async def send_dm_to_user(bot: commands.Bot, user_id: int, message:str):
         await user.send(message)
     else:
         print(f"Could not find user. Message: ({message}) not sent as DM")
+        
+
+def split_messages(content, chunk_size=2000):
+    # Split the content into chunks of up to chunk_size characters
+    return [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]

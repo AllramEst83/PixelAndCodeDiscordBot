@@ -337,9 +337,13 @@ async def on_message(message):
             thread_id = await get_or_create_thread(user_id, client)
             await send_user_message(thread_id, question, client)
             run_id = await create_and_poll_run(thread_id, ASSISTANT_ID, client)        
-            embededMessage = await retrieve_response(thread_id, client)
-            await message.channel.send(embed=embededMessage)
-
+            response = await retrieve_response(thread_id, client)
+            
+            if len(response) > 1:
+                for msg in response:
+                    await message.channel.send(msg)
+            else:
+                await message.channel.send(response[0])            
         else:
             await message.channel.send("Du nämnde mig! Har du en fråga eller är det något jag kan hjälpa till med?")
 
@@ -448,10 +452,14 @@ async def summarize(ctx: discord.Interaction):
         thread_id = await get_or_create_thread(user_id, client)
         await send_user_message(thread_id, summary, client)
         run_id = await create_and_poll_run(thread_id, SUMMARY_ASSISTANT_ID, summary_client)  
-        embededResponse = await retrieve_response(thread_id, client)
-
-        # Send the processed response as a follow-up
-        await ctx.followup.send(embed = embededResponse)
+        assistant_response = await retrieve_response(thread_id, client)
+        
+        if len(assistant_response) > 1:
+            for msg in assistant_response:
+                await ctx.channel.send(msg)
+        else:
+            await ctx.followup.send(assistant_response[0])
+            
     except Exception as e:
         print(e)
         # Send an error message as a follow-up if an exception occurs
@@ -553,8 +561,13 @@ async def ask(ctx: discord.Interaction, question: str):
             run_id = await create_and_poll_run(thread_id, ASSISTANT_ID, client)  
             response = await retrieve_response(thread_id, client)
 
-            await ctx.followup.send(embed=response)
-
+            if len(response) > 1:
+                for msg in response:
+                    await ctx.channel.send(msg)
+            else:
+                await ctx.followup.send(response[0])
+             
+                    
     except Exception as e:
         print(e)
         await ctx.followup.send("Sorry, I encountered an error. Please try again later.")
