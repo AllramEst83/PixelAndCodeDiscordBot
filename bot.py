@@ -31,8 +31,8 @@ BOT_CREATOR_USER_ID = os.getenv('BOT_CREATOR_USER_ID')
 
 # Varibles for random encouraging messages
 chosen_time = None
-sent_today = False
 is_task_active = False
+sent_today = False
 
 # Define Discord bot intents
 intents = discord.Intents.all()
@@ -96,13 +96,18 @@ async def calculate_wait_time():
         print(f"No time slots left to send message today")
         return None
     
+    selected_time_str  = None
    # Check if we already have a chosen time for today
     if chosen_time is None or now > chosen_time:
         # Randomly choose one of the remaining times for today
-        chosen_time_str = random.choice(today_times)
+        selected_time_str  = random.choice(today_times)
+    
+    # Handle the case where no time was selected
+    if selected_time_str is None:
+        return None
     
     # Parse the chosen time string into a datetime object
-    chosen_datetime = datetime.strptime(chosen_time_str, "%H:%M").time()
+    chosen_datetime = datetime.strptime(selected_time_str , "%H:%M").time()
     
     # Replace the current time with the chosen time keeping the same date
     chosen_time = now.replace(hour=chosen_datetime.hour, minute=chosen_datetime.minute, second=0, microsecond=0)
@@ -111,8 +116,6 @@ async def calculate_wait_time():
     if chosen_time < now:
         chosen_time += timedelta(days=1)
     
-    print(f"Next message will be sent {chosen_time.strftime('%H:%M')}")
-
     # Calculate the number of seconds until the chosen time
     wait_seconds = (chosen_time - now).total_seconds()
     
@@ -121,6 +124,7 @@ async def calculate_wait_time():
 # Function to send a supportive message
 async def send_supportive_message():
     global sent_today
+    
     guild = bot.get_guild(int(GUILD_ID))
     if guild:
         channel = guild.get_channel(int(PIXIE_PUSH_CHANNEL))
@@ -133,71 +137,97 @@ async def send_supportive_message():
                 message += f"\n{role.mention}"            
 
             await channel.send(message)
+            sent_today = True
             print("Message sent")
-            sent_today = True  # Mark as message sent
         else:
             print("Channel not found.")
     else:
         print("Guild not found.")
 
+def calculate_wait_time_until_next_weekday_morning():
+    # Set the Stockholm time zone
+    stockholm_tz = pytz.timezone('Europe/Stockholm')
+
+    # Get current time in Stockholm
+    now = datetime.now(stockholm_tz)
+
+    # Determine the next weekday
+    if now.weekday() < 5:  # If today is a weekday
+        next_weekday = now + timedelta(days=1)
+    else:  # If today is Saturday or Sunday
+        next_weekday = now + timedelta(days=(7 - now.weekday()))
+
+    # Set the time for 08:05 AM
+    next_weekday_morning = next_weekday.replace(hour=8, minute=0, second=0, microsecond=0)
+
+    # Calculate the time difference
+    time_diff = next_weekday_morning - now
+
+    # Calculate total seconds
+    total_seconds = time_diff.total_seconds()
+
+    # Calculate total hours and minutes
+    total_hours = time_diff.days * 24 + total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    
+    return total_hours, minutes, total_seconds
+
 
 # Scheduled task for sending messages
-@tasks.loop(hours=1)
+@tasks.loop(minutes=10)
 async def scheduled_message():
-    global chosen_time, sent_today
+    global chosen_time, sent_today, is_task_active
 
     if not is_task_active:
         print("Task is on pause by the user. Will not run scheduled_message. Run toggle_task to activate the Task")
         return  # Skip the task if it's not active
+    
+    try:
+        total_hours, minutes, total_seconds = calculate_wait_time_until_next_weekday_morning()
 
-    stockholm_tz = pytz.timezone('Europe/Stockholm')
-    now = datetime.now(stockholm_tz)
-    current_time = now.time()
+        # Determine if the script needs to go to sleep
+        should_sleep = False
+        if sent_today:
+            print("Message has already been sent today.")
+            should_sleep = True
+            sent_today = False  # Resetting for the next cycle
 
-    # Define the reset time window
-    reset_start_time = time(21, 0)
-    reset_end_time = time(23, 0)
-
-    # Check if current time is within the reset window and if a message has been sent today
-    if reset_start_time <= current_time <= reset_end_time and sent_today:
-        sent_today = False
-        chosen_time = None
-        print("Variables have been reset.")
-
-    # If today's message has already been sent, skip the rest of the function
-    if sent_today:
-        print("Message already sent today")
-        return
-
-    # Check if it's a weekday and current time is between the first and last scheduled times
-    if now.weekday() < 5 and (time(8, 0) <= current_time < time(16, 0)):
         wait_seconds = await calculate_wait_time()
-        if wait_seconds is not None:
-            
-            chosen_time_str = (now + timedelta(seconds=wait_seconds)).strftime("%H:%M")
-            message = f"Chosen time to wake up and post message is {chosen_time_str}"
-            
-            print(message)
-            await send_dm_to_user(bot, int(BOT_CREATOR_USER_ID), message)
-            
-            try:
-                print("Going to sleep")
-                await asyncio.sleep(wait_seconds)
-                
-                # Only proceed to send the message if sleep completes without interruption
-                print("Sending message")
-                await send_supportive_message()
-                chosen_time = datetime.strptime(chosen_time_str, "%H:%M")                
+        if wait_seconds is None:
+            print("No time slots left today.")
+            should_sleep = True
 
-            except asyncio.CancelledError as e:
-                print(f"Scheduled_message was cancelled: {e}")
-                return
-            except Exception as e:
-                print(f"An unexpected error occurred: {e}")
-                # Do not send the message, just return from the function
-                return
-        else:
-            print("No scheduled times left for today.")
+        # Sleep if needed
+        if should_sleep:
+            print(f"Going to sleep until 08:00 next weekday. Time until I wake up: {total_hours} hours and {minutes} minutes. Total amount of seconds left: {total_seconds}")
+            await asyncio.sleep(total_seconds)
+            wait_seconds = await calculate_wait_time()  # Recalculate wait time after waking up
+                         
+        stockholm_tz = pytz.timezone('Europe/Stockholm')
+        now = datetime.now(stockholm_tz)
+        
+        formatted_wake_up_time = (now + timedelta(seconds=wait_seconds)).strftime("%H:%M")
+        message = f"Chosen time to wake up and post message is {formatted_wake_up_time}"
+        
+        print(message)
+        await send_dm_to_user(bot, int(BOT_CREATOR_USER_ID), message)
+    
+        print("Going to sleep... again.")
+        await asyncio.sleep(wait_seconds)
+        
+        # Only proceed to send the message if sleep completes without interruption
+        print("Sending message")
+        await send_supportive_message()
+        
+        chosen_time = None                
+
+    except asyncio.CancelledError as e:
+        print(f"Scheduled_message was cancelled: {e}")
+        return
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        # Do not send the message, just return from the function
+        return
 
 #Events
 # Notifies when somebody joins the server
@@ -343,14 +373,9 @@ async def help_error_handler(interaction: discord.Interaction, error: app_comman
             await interaction.response.send_message("An error occurred while processing the command.", ephemeral=True)
 
 
-@bot.tree.command(name="summarize_beta", description="Summera chathistoriken.")
-@app_commands.describe(limit="Summeringsgräns, 100 är max gräns.")
+@bot.tree.command(name="summarize", description="Summera chathistoriken.")
 @app_commands.checks.has_role(pixel_and_code_role_name)
-async def summarize(ctx: discord.Interaction, limit: int):
-    # Ensure the limit does not exceed 100
-    if limit > 100:
-        await ctx.response.send_message("Gränsen kan inte vara högre än 100. Försök igen med en lägre gräns.")
-        return
+async def summarize(ctx: discord.Interaction):
 
     # Defer the response as the next operations might take longer
     await ctx.response.defer()
@@ -358,6 +383,7 @@ async def summarize(ctx: discord.Interaction, limit: int):
      # Send an initial update to the user after deferring
     await ctx.followup.send("Ett ögonblick så ska jag summera historiken.")
 
+    limit = 100
     summary = await get_chat_history_by_limit(ctx, limit, gpt_summary_instruction)
 
     try:

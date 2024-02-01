@@ -152,6 +152,7 @@ async def get_chat_history_by_limit(ctx: discord.interactions, limit: int, gpt_i
 async def send_dm_to_user(bot: commands.Bot, user_id: int, message:str):
     user = await bot.fetch_user(user_id)
     if user:
+        print(f"bot-creator notified.")
         await user.send(message)
     else:
         print(f"Could not find user. Message: ({message}) not sent as DM")
