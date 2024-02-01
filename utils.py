@@ -59,8 +59,9 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
 
          # Tasks
         embed.add_field(
-            name="Automation",
-            value=f"- **Random encouraging messages**: Pixie kommer då och då att skicka uppmuntrande kommentarer till kollegorna på Pixel&Code i Pixie-Push.\n"
+            name="Automation",            
+            value=f"- **Random encouraging messages**: Pixie kommer då och då att skicka uppmuntrande kommentarer till kollegorna på Pixel&Code i Pixie-Push\n"
+                  f"- **Time report reminder**: Pixie skickar en påminnelse om att lämna in tidrapporten varje måndag samt den sista dagen i månaden till kanalen {pixies_channel_str}, förutsatt att den inte infaller på en lördag eller söndag. Om den sista dagen i månaden är en lördag eller söndag, kommer påminnelsen istället att skickas på fredagen (OBS! Denna version tar inte hänsyn till röda dagar)\n"
         )
 
         return embed

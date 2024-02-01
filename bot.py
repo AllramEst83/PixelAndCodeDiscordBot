@@ -8,7 +8,7 @@ import random
 
 from utils import get_embed_message, verify_env_variables, get_or_create_thread, cleanup_inactive_threads, get_embed_voting_message, create_help_embed_message, get_chat_history_by_limit, send_dm_to_user
 from messaging import send_user_message, create_and_poll_run, retrieve_response
-from constants import pixies_channel_name, pixel_and_code_role_name, gpt_summary_instruction, supportive_messages, scheduled_times,bot_creator_role_name
+from constants import pixies_channel_name, pixel_and_code_role_name, gpt_summary_instruction, supportive_messages, scheduled_times,bot_creator_role_name, time_report_reminders
 
 from discord import app_commands
 from discord.ext import commands
@@ -16,6 +16,8 @@ from discord.ext import tasks
 from datetime import datetime, timedelta
 from datetime import time
 from dotenv import load_dotenv
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # Load environment variables from .env file
 load_dotenv()
@@ -54,18 +56,72 @@ async def on_ready():
         bot.loop.create_task(cleanup_inactive_threads(client))
         print("cleanup_inactive_threads done")
 
-        print(f'--------------------------------')
+        print('--------------------------------')
 
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} commands")
         print(f"Time on server is {datetime.now().strftime('%H:%M')} and we are ready to go!!!")
 
-        print(f'--------------------------------')
-
-        print("Starting scheduled_message loop.")
+        print('--------------------------------')
+        
+        print("Starting time report job")
+        schedule_time_report_tasks()
+        
+        print("---------------------------------")
+        
+        print("Starting scheduled_message task.")
         scheduled_message.start()  # Start the scheduled task
     except Exception as e:
         print(e)
+
+# -------schedule_time_report_tasks-------------------------------------
+
+def schedule_time_report_tasks():
+    scheduler = AsyncIOScheduler(timezone="Europe/Stockholm")
+    
+    # Task for every Monday
+    scheduler.add_job(send_time_report_message, CronTrigger(day_of_week='mon', hour=9, minute=0))
+
+    # Daily check between 25-31 evry month for the last day of the month notification
+    scheduler.add_job(check_last_day_of_month, CronTrigger(day='25-31', hour=9, minute=0))
+    
+    scheduler.start()
+
+async def check_last_day_of_month():
+    timezone = pytz.timezone("Europe/Stockholm")
+    today = datetime.now(timezone).date()
+    # Find the last day of the current month
+    next_month = today.replace(day=28) + timedelta(days=4)  # this will never fail
+    last_day_of_month = next_month - timedelta(days=next_month.day)
+    
+    # If the last day of the month is Saturday (5) or Sunday (6), adjust to send on Friday
+    if last_day_of_month.weekday() == 5:  # Saturday
+        send_day = last_day_of_month - timedelta(days=1)
+    elif last_day_of_month.weekday() == 6:  # Sunday
+        send_day = last_day_of_month - timedelta(days=2)
+    else:
+        send_day = last_day_of_month
+
+    # Check if today is the day to send the message
+    if today == send_day:
+        await send_time_report_message()
+
+
+async def send_time_report_message():
+    
+    guild = bot.get_guild(int(GUILD_ID))
+    if guild:
+        message = random.choice(time_report_reminders)
+        
+        channel = guild.get_channel(int(PIXIE_PUSH_CHANNEL))
+        role = discord.utils.get(guild.roles, name=pixel_and_code_role_name)
+
+        if role:
+            message += f"\n{role.mention}"
+        
+        await channel.send(message)
+    
+# -------schedule_time_report_tasks------------------------
 
 @bot.event
 async def on_shutdown():

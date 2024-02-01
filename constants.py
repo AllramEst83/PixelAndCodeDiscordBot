@@ -18,7 +18,7 @@ supportive_messages = [
   "Varje utmaning ni står inför är en trampsten mot framgång. Håll er starka!",
   "Energin i det här teamet är otrolig. Låt oss hålla momentumet uppe!",
   "Our boss mentioned how pleased he is with everyone's performance. Great job!",
-  "Your positive attitude is contagious and it’s making a huge difference.",
+  "Your positive attitude is contagious and it's making a huge difference.",
   "Remember, every effort counts and you all are doing brilliantly!",
   "The way you handle challenges is impressive. Keep pushing forward!",
   "Your hard work doesn't go unnoticed. The boss is very proud of this team!",
@@ -45,6 +45,31 @@ supportive_messages = [
   "Together, every small achievement paves the way for our collective success.",
   "Your hard work and persistence are highly appreciated. You're making a real difference!"
 ]
+
+time_report_reminders = [
+    "Friendly reminder: Please fill out your time report. Your punctuality helps us all shine brighter!",
+    "Remember to submit your time report today. It's a small step that makes a big difference!",
+    "Hey team, let's get those time reports in! Your timely submissions are greatly appreciated.",
+    "Just a nudge to say it's time report time! Thank you for being so reliable and prompt.",
+    "Don't forget to fill out your time report. Together, we keep the workflow smooth and efficient!",
+    "A gentle reminder to complete your time report. It's an important piece of our project puzzle.",
+    "Time report alert! Your diligence in submitting on time helps us all succeed.",
+    "It's that time again - please fill out and submit your time report. Every submission counts!",
+    "Let's wrap up the week by getting our time reports in. Thank you for your commitment!",
+    "Your attention to time reports is what makes our team outstanding. Please remember to submit yours!",
+    "Vänlig påminnelse: Glöm inte att fylla i din tidrapport. Din punktlighet lyser upp vårt arbete!",
+    "Kom ihåg att skicka in din tidrapport idag. Varje steg räknas!",
+    "Hej team, dags att skicka in tidrapporterna! Tack för att ni är så noggranna.",
+    "En liten puff att det är dags för tidrapportering! Tack för att ni alltid är så pålitliga.",
+    "Glöm inte bort tidrapporten. Tillsammans håller vi arbetet flytande och effektivt!",
+    "En försiktig påminnelse om att fylla i din tidrapport. Det är en viktig del av vårt projekt.",
+    "Tidrapport-larm! Din noggrannhet med att skicka in i tid hjälper oss alla att lyckas.",
+    "Det är den tiden igen - vänligen fyll i och skicka din tidrapport. Varje bidrag är viktigt!",
+    "Låt oss avsluta veckan med att skicka in våra tidrapporter. Tack för ert engagemang!",
+    "Ditt fokus på tidrapporter gör vårt team enastående. Kom ihåg att skicka in din!"
+]
+
+
 
 scheduled_times = [
     "09:00",
