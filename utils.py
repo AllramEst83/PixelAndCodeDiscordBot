@@ -66,9 +66,9 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
 
         return embed
      
-# Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
-def verify_env_variables(DISCORD_TOKEN:str, OPENAI_API_KEY:str, ASSISTANT_ID:str, SUMMARY_ASSISTANT_ID:str):
-    if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID or not SUMMARY_ASSISTANT_ID:
+# Check if the varbles are not empty
+def verify_env_variables(DISCORD_TOKEN: str, OPENAI_API_KEY: str, ASSISTANT_ID: str, SUMMARY_ASSISTANT_ID: str, GUILD_ID: str, PIXIE_PUSH_CHANNEL: str, BOT_CREATOR_USER_ID: str):
+    if not DISCORD_TOKEN or not OPENAI_API_KEY or not ASSISTANT_ID or not SUMMARY_ASSISTANT_ID or not GUILD_ID or not PIXIE_PUSH_CHANNEL or not BOT_CREATOR_USER_ID:
         print("Error: Required environment variables are missing.")
         sys.exit(1)
 
