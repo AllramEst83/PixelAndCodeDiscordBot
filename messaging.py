@@ -1,10 +1,9 @@
 # messaging.py
 
 import asyncio
-import discord
 import openai
 
-from utils import get_embed_message
+from utils import split_messages
 
 # Function to send a message from the user to the OpenAI API thread
 async def send_user_message(thread_id, user_input, client: openai.Client):
@@ -41,11 +40,15 @@ async def retrieve_response(thread_id, client: openai.Client):
         assistant_messages = [m for m in messages.data if m.role == 'assistant']
 
         if assistant_messages:
-            embededMessage = await get_embed_message("Svar", f"{assistant_messages[0].content[0].text.value}.", discord.Color.green())
-            return embededMessage
+            assistant_reply = assistant_messages[0].content[0].text.value
+            
+            split_message = split_messages(assistant_reply)
+            
+            return split_message
         else:
-             return await get_embed_message("Error", "Sorry, I couldn't fetch a response. Please try again later or ask a different question.", discord.Color.red())
+             return "Error: Sorry, I couldn't fetch a response. Please try again later or ask a different question."
 
     except Exception as e:
             print(f"Error in retrieve_response: {e}")
-            return await get_embed_message("Error", "An error occurred while fetching the response.", discord.Color.red())
+            return await "Error: An error occurred while fetching the response."
+

@@ -5,6 +5,8 @@ import sys
 import time
 import asyncio
 import openai
+import discord
+from discord.ext import commands
 
 # User-thread mapping with last interaction time
 user_threads = {}
@@ -40,9 +42,9 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
         embed.add_field(
             name="Kommandon",
             value="- **help**: En lista över Pixies kommandon (Bara för oss med rollen 'pixel&code').\n"
-                "- **ask_the_bot**: Ställ frågor till boten om Pixel&Code. Detta kommando är tänkt för kunder i lobbyn\n"
+                "- **ask**: Ställ frågor till boten om Pixel&Code. Detta kommando är tänkt för kunder i lobbyn\n"
                 "- **vote**: Skapa en enkel omröstning. Max 10 val (Bara för oss med rollen 'pixel&code').\n"
-                "- **summarize**: Summerar kanalens innehåll. Bra om man vill komma ikapp men inte läsa igenom allt.",
+                "- **summarize**: Summerar kanalens innehåll. Bra om man vill komma ikapp men inte läsa igenom allt (Bara för oss med rollen 'pixel&code').",
             inline=False
         )
 
@@ -53,6 +55,13 @@ async def create_help_embed_message(pixies_channel_str:str, color: discord.Color
                 f"- **on_member_remove**: Pixie meddelar i kanalen {pixies_channel_str} när en medlem lämnat servern.\n"
                 "- **Mention**: Som ask_the_bot fast man kan göra en mention och ställa sin fråga om Pixel&Code.",
             inline=False
+        )
+
+         # Tasks
+        embed.add_field(
+            name="Automation",            
+            value=f"- **Random encouraging messages**: Pixie kommer då och då att skicka uppmuntrande kommentarer till kollegorna på Pixel&Code i Pixie-Push\n"
+                  f"- **Time report reminder**: Pixie skickar en påminnelse om att lämna in tidrapporten varje måndag samt den sista dagen i månaden till kanalen {pixies_channel_str}, förutsatt att den inte infaller på en lördag eller söndag. Om den sista dagen i månaden är en lördag eller söndag, kommer påminnelsen istället att skickas på fredagen (OBS! Denna version tar inte hänsyn till röda dagar)\n"
         )
 
         return embed
@@ -89,11 +98,11 @@ async def cleanup_inactive_threads(client: openai.Client):
     while True:
         current_time = time.time()
         inactive_users = [user_id for user_id, thread_info in user_threads.items() 
-                          if current_time - thread_info['last_interaction'] >= 1800]
+        if current_time - thread_info['last_interaction'] >= 1800]
         for user_id in inactive_users:
             # Delete the thread at OpenAI's end
             thread_id = user_threads[user_id]['thread_id']
-            await client.beta.threads.delete(thread_id)
+            client.beta.threads.delete(thread_id)
 
             # Remove the thread info from the user_threads dictionary
             del user_threads[user_id]
@@ -140,3 +149,16 @@ async def get_chat_history_by_limit(ctx: discord.interactions, limit: int, gpt_i
     summary = f"{gpt_instruction}\n" + '\n'.join([f"{message.author.name}: {message.content}" for message in messages])
 
     return summary
+
+async def send_dm_to_user(bot: commands.Bot, user_id: int, message:str):
+    user = await bot.fetch_user(user_id)
+    if user:
+        print(f"bot-creator notified.")
+        await user.send(message)
+    else:
+        print(f"Could not find user. Message: ({message}) not sent as DM")
+        
+
+def split_messages(content, chunk_size=2000):
+    # Split the content into chunks of up to chunk_size characters
+    return [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
