@@ -574,7 +574,7 @@ async def ask(ctx: discord.Interaction, question: str):
 
 
 # Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
-verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID, SUMMARY_ASSISTANT_ID)
+verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID, SUMMARY_ASSISTANT_ID, GUILD_ID, PIXIE_PUSH_CHANNEL, BOT_CREATOR_USER_ID)
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)

@@ -51,3 +51,35 @@ To run the Pixel&Code Discord Bot, create a `.env` file with the following varia
 - `GUILD_ID`: The Guild ID for your Discord server.
 - `PIXIE_PUSH_CHANNEL`: The channel ID for sending scheduled messages.
 - `BOT_CREATOR_USER_ID`: The user ID of the bot creator for direct messaging.
+
+
+## Project Setup Instructions
+
+This project uses a Python virtual environment to manage dependencies. To activate the virtual environment and set up the project environment, please follow the instructions below, depending on your operating system.
+
+#### For Unix-like Systems (macOS, Linux, etc.)
+
+- Open a Terminal: Navigate to the project directory using your terminal application.
+- Make the Bash Script Executable: Before running the script for the first time, you need to make it executable. Run the following command in the terminal:
+
+```bash
+chmod +x start_project_bash.sh
+```
+- Run the Bash Script: Execute the script to activate the virtual environment:
+
+```bash
+./start_project_bash.sh
+```
+
+You should see a message indicating that the virtual environment has been activated. Additional setup commands in the script will also be executed.
+
+### For Windows
+
+- Open Command Prompt: Navigate to the project directory using Command Prompt.
+- Run the Batch Script: Execute the batch file to activate the virtual environment:
+
+```cmd
+start_project_cmd.bat
+```
+
+You will see a message indicating that the virtual environment has been activated. Any additional setup commands in the script will also be executed.
