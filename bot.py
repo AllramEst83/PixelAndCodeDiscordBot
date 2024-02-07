@@ -173,7 +173,7 @@ async def calculate_wait_time():
         chosen_time += timedelta(days=1)
     
     # Calculate the number of seconds until the chosen time
-    wait_seconds = (chosen_time - now).total_seconds()
+    wait_seconds = (chosen_time - now).total_seconds() if chosen_time else 0  # Ensure chosen_time is not None
     
     return wait_seconds
 
