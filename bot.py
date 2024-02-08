@@ -8,7 +8,7 @@ import random
 
 from utils import get_embed_message, verify_env_variables, get_or_create_thread, cleanup_inactive_threads, get_embed_voting_message, create_help_embed_message, get_chat_history_by_limit, send_dm_to_user
 from messaging import send_user_message, create_and_poll_run, retrieve_response
-from constants import pixies_channel_name, pixel_and_code_role_name, gpt_summary_instruction, supportive_messages, scheduled_times,bot_creator_role_name, time_report_reminders
+from constants import general_channel_name, pixel_and_code_role_name, gpt_summary_instruction, supportive_messages, scheduled_times,bot_creator_role_name, time_report_reminders
 
 from discord import app_commands
 from discord.ext import commands
@@ -28,7 +28,7 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 SUMMARY_ASSISTANT_ID = os.getenv('SUMMARY_ASSISTANT_ID')
 ASSISTANT_ID = os.getenv('ASSISTANT_ID')
 GUILD_ID = os.getenv('GUILD_ID')
-PIXIE_PUSH_CHANNEL = os.getenv('PIXIE_PUSH_CHANNEL')
+GENERAL_CHANNEL = os.getenv('GENERAL_CHANNEL')
 BOT_CREATOR_USER_ID = os.getenv('BOT_CREATOR_USER_ID')
 
 # Varibles for random encouraging messages
@@ -74,7 +74,6 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-# -------schedule_time_report_tasks-------------------------------------
 
 def schedule_time_report_tasks():
     scheduler = AsyncIOScheduler(timezone="Europe/Stockholm")
@@ -113,7 +112,7 @@ async def send_time_report_message():
     if guild:
         message = random.choice(time_report_reminders)
         
-        channel = guild.get_channel(int(PIXIE_PUSH_CHANNEL))
+        channel = guild.get_channel(int(GENERAL_CHANNEL))
         role = discord.utils.get(guild.roles, name=pixel_and_code_role_name)
 
         if role:
@@ -121,7 +120,6 @@ async def send_time_report_message():
         
         await channel.send(message)
     
-# -------schedule_time_report_tasks------------------------
 
 @bot.event
 async def on_shutdown():
@@ -147,35 +145,38 @@ async def calculate_wait_time():
     # Get today's times that are still upcoming
     today_times = [t for t in scheduled_times if t >= now.strftime("%H:%M")]
 
-    # If there are no times left today, return None (no wait time needed)
+    # If there are no times left today, log and return None
     if not today_times:
-        print(f"No time slots left to send message today")
+        print("No time slots left to send message today.")
         return None
     
-    selected_time_str  = None
-   # Check if we already have a chosen time for today
+    # Initialize selected_time_str
+    selected_time_str = None
+
+    # Check if we already have a chosen time for today or need to select a new one
     if chosen_time is None or now > chosen_time:
         # Randomly choose one of the remaining times for today
-        selected_time_str  = random.choice(today_times)
+        selected_time_str = random.choice(today_times)
     
-    # Handle the case where no time was selected
+    # If no time was selected, return None
     if selected_time_str is None:
         return None
     
-    # Parse the chosen time string into a datetime object
-    chosen_datetime = datetime.strptime(selected_time_str , "%H:%M").time()
+    # Convert the selected time string into a datetime object
+    chosen_datetime = datetime.strptime(selected_time_str, "%H:%M").time()
     
-    # Replace the current time with the chosen time keeping the same date
+    # Update chosen_time with the selected time for today
     chosen_time = now.replace(hour=chosen_datetime.hour, minute=chosen_datetime.minute, second=0, microsecond=0)
     
-    # If the chosen time is in the past, schedule it for the next day
+    # If the chosen_time has passed, adjust it to the next occurrence
     if chosen_time < now:
         chosen_time += timedelta(days=1)
     
-    # Calculate the number of seconds until the chosen time
-    wait_seconds = (chosen_time - now).total_seconds() if chosen_time else 0  # Ensure chosen_time is not None
+    # Calculate the wait time in seconds until the chosen_time
+    wait_seconds = (chosen_time - now).total_seconds()
     
     return wait_seconds
+
 
 # Function to send a supportive message
 async def send_supportive_message():
@@ -183,7 +184,7 @@ async def send_supportive_message():
     
     guild = bot.get_guild(int(GUILD_ID))
     if guild:
-        channel = guild.get_channel(int(PIXIE_PUSH_CHANNEL))
+        channel = guild.get_channel(int(GENERAL_CHANNEL))
         
         if channel:
             message = random.choice(supportive_messages)
@@ -213,7 +214,7 @@ def calculate_wait_time_until_next_weekday_morning():
     else:  # If today is Saturday or Sunday
         next_weekday = now + timedelta(days=(7 - now.weekday()))
 
-    # Set the time for 08:05 AM
+    # Set the time for 08:00 AM
     next_weekday_morning = next_weekday.replace(hour=8, minute=0, second=0, microsecond=0)
 
     # Calculate the time difference
@@ -290,7 +291,7 @@ async def scheduled_message():
 @bot.event
 async def on_member_join(member):
     # Find the channel named 'general'
-    pixies_channel = discord.utils.get(member.guild.channels, name=pixies_channel_name)
+    pixies_channel = discord.utils.get(member.guild.channels, name=general_channel_name)
     role_to_mention = discord.utils.get(member.guild.roles, name=pixel_and_code_role_name) 
 
     if pixies_channel and role_to_mention:
@@ -304,7 +305,7 @@ async def on_member_join(member):
 @bot.event
 async def on_member_remove(member):
     # Find the channel named 'general'
-    pixies_channel = discord.utils.get(member.guild.channels, name=pixies_channel_name)
+    pixies_channel = discord.utils.get(member.guild.channels, name=general_channel_name)
     role_to_mention = discord.utils.get(member.guild.roles, name=pixel_and_code_role_name)
 
     if pixies_channel and role_to_mention:
@@ -402,7 +403,7 @@ async def vote_error_handler(interaction: discord.Interaction, error: app_comman
 @app_commands.checks.has_role(pixel_and_code_role_name)
 async def help(ctx: discord.Interaction):
     
-        pixies_channel = discord.utils.get(ctx.guild.channels, name=pixies_channel_name)
+        pixies_channel = discord.utils.get(ctx.guild.channels, name=general_channel_name)
         pixies_channel_str = ""
 
         if pixies_channel is None:
@@ -574,7 +575,7 @@ async def ask(ctx: discord.Interaction, question: str):
 
 
 # Check if the DISCORD_TOKEN or OPENAI_API_KEY or ASSISTANT_ID is not empty
-verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID, SUMMARY_ASSISTANT_ID, GUILD_ID, PIXIE_PUSH_CHANNEL, BOT_CREATOR_USER_ID)
+verify_env_variables(DISCORD_TOKEN, OPENAI_API_KEY, ASSISTANT_ID, SUMMARY_ASSISTANT_ID, GUILD_ID, GENERAL_CHANNEL, BOT_CREATOR_USER_ID)
 
 # Run the bot using the Discord token
 bot.run(DISCORD_TOKEN)
